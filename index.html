@@ -14,7 +14,9 @@
     --line:#e3e7ee; --accent:#2f6fd6; --accent-bg:#e9f1fc;
     --good:#178a50; --good-bg:#e5f5ec; --miss:#c33c3c; --miss-bg:#fbeaea;
     --warn:#9a6b00; --warn-bg:#fff3d6;
-    --strength:#2f6fd6; --run:#c05621; --mobility:#0f766e; --cardio:#6d4fc2;
+    --strength:#2f6fd6; --run:#c05621; --mobility:#0f766e; --cardio:#6d4fc2; --mind:#6d4fc2;
+    --d-physical:#2f6fd6; --d-mental:#6d4fc2; --d-emotional:#d6336c; --d-intellectual:#0f766e;
+    --d-financial:#b8860b; --d-philosophical:#475569;
     --radius:14px; --navh:62px;
   }
   *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
@@ -36,8 +38,8 @@
        border-top:1px solid var(--line); display:flex;
        padding-bottom:env(safe-area-inset-bottom); height:calc(var(--navh) + env(safe-area-inset-bottom));}
   .tabbar button{flex:1; border:none; background:none; font:inherit; cursor:pointer; color:var(--muted);
-       font-size:.62rem; font-weight:600; display:flex; flex-direction:column; align-items:center; gap:3px; padding-top:9px;}
-  .tabbar button svg{width:21px; height:21px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
+       font-size:.56rem; font-weight:600; display:flex; flex-direction:column; align-items:center; gap:2px; padding-top:9px;}
+  .tabbar button svg{width:19px; height:19px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
   .tabbar button.active{color:var(--accent);}
   .view{display:none;}
   .view.show{display:block; animation:fade .2s ease;}
@@ -56,6 +58,7 @@
   .sess{border-left:4px solid var(--muted);}
   .sess.strength{border-left-color:var(--strength);} .sess.run{border-left-color:var(--run);}
   .sess.mobility{border-left-color:var(--mobility);} .sess.cardio{border-left-color:var(--cardio);}
+  .sess.mind{border-left-color:var(--mind);}
   .sess .time{font-size:.72rem; color:var(--muted); font-weight:700;}
   .sess .name{font-weight:700; font-size:.92rem;}
   .sess .detail{font-size:.78rem; color:var(--ink2); margin-top:1px;}
@@ -131,6 +134,7 @@
   .catchip.career{background:var(--accent-bg); color:var(--accent);}
   .catchip.fitness{background:var(--good-bg); color:var(--good);}
   .catchip.personal{background:#f3ecff; color:var(--cardio);}
+  .catchip.mind{background:#f3ecff; color:var(--mind);}
   .goalitem{border-bottom:1px solid var(--line); padding:12px 0;}
   .goalitem:last-child{border-bottom:none;}
   .goalitem .gtitle{font-size:.9rem; font-weight:700; display:flex; align-items:center; flex-wrap:wrap;}
@@ -160,6 +164,46 @@
   .gratrow span{color:#e0a326;}
   .gratrow input{flex:1; border:1px solid var(--line); border-radius:9px; padding:8px; font:inherit;
        font-size:.85rem; background:var(--bg);}
+  /* domain chips */
+  .dchip{display:inline-block; font-size:.62rem; font-weight:800; text-transform:uppercase; letter-spacing:.03em;
+       padding:2px 7px; border-radius:6px; margin-left:6px; color:#fff;}
+  .dtoggle{display:inline-flex; align-items:center; gap:4px; font-size:.72rem; font-weight:700; padding:6px 10px;
+       border-radius:99px; border:1.5px solid var(--line); background:var(--surface); color:var(--ink2); cursor:pointer;
+       margin:0 6px 6px 0;}
+  .dtoggle .dot2{width:8px; height:8px; border-radius:99px; flex:0 0 auto;}
+  .dtoggle.on{color:#fff; border-color:transparent;}
+  .dtoggles{display:flex; flex-wrap:wrap; margin-top:4px;}
+  .emochip{display:inline-block; font-size:.76rem; font-weight:600; padding:6px 12px; border-radius:99px;
+       border:1.5px solid var(--line); background:var(--surface); color:var(--ink2); cursor:pointer; margin:0 6px 6px 0;}
+  .emochip.on{background:var(--d-emotional); border-color:var(--d-emotional); color:#fff;}
+  .connectrow{display:flex; gap:8px; align-items:center;}
+  .connectrow input{flex:1;}
+  .qualitydots{display:flex; gap:4px;}
+  .qualitydots span{width:26px; height:26px; border-radius:99px; border:2px solid var(--line); cursor:pointer;
+       display:flex; align-items:center; justify-content:center; font-size:.72rem; color:var(--muted); font-weight:700;}
+  .qualitydots span.on{background:var(--d-emotional); border-color:var(--d-emotional); color:#fff;}
+  .onthisday{background:#fff7e6; border:1px solid #f0dcae; border-radius:11px; padding:11px 13px; font-size:.82rem;
+       color:#7a5a12; margin-bottom:12px;}
+  .onthisday b{display:block; font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; margin-bottom:3px;}
+  .skillitem, .decitem{border-bottom:1px solid var(--line); padding:11px 0;}
+  .skillitem:last-child, .decitem:last-child{border-bottom:none;}
+  .skillitem .stitle, .decitem .dtitle{font-size:.87rem; font-weight:700;}
+  .decitem .dreason{font-size:.8rem; color:var(--ink2); margin-top:3px;}
+  .decitem .doutcome{font-size:.8rem; color:var(--good); margin-top:5px; background:var(--good-bg); border-radius:8px; padding:6px 9px;}
+  .duechip{display:inline-block; background:var(--warn-bg); color:var(--warn); font-size:.64rem; font-weight:800;
+       border-radius:6px; padding:1px 7px; margin-left:6px;}
+  .valuesbox textarea{min-height:80px;}
+  .valchip{display:inline-flex; align-items:center; gap:6px; background:var(--bg); border:1px solid var(--line);
+       border-radius:99px; padding:5px 6px 5px 12px; font-size:.8rem; font-weight:600; margin:0 6px 6px 0;}
+  .valchip .x{cursor:pointer; color:var(--muted); font-size:.72rem; background:var(--surface); border-radius:99px;
+       width:18px; height:18px; display:flex; align-items:center; justify-content:center;}
+  .radarwrap svg{width:100%; height:auto; display:block;}
+  .radarlegend{display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:10px;}
+  .radarlegend .rl{display:flex; align-items:center; gap:6px; font-size:.76rem; color:var(--ink2);}
+  .radarlegend .rl .sw{width:10px; height:10px; border-radius:3px; flex:0 0 auto;}
+  .radarlegend .rl b{color:var(--ink); font-variant-numeric:tabular-nums;}
+  .fxrow{display:flex; gap:8px;}
+  .fxrow input{flex:1;}
   .minilink{font-size:.75rem; font-weight:700; color:var(--accent); cursor:pointer;}
   .measure{display:flex; gap:10px;}
   .measure label{flex:1; font-size:.72rem; font-weight:700; color:var(--muted);}
@@ -278,6 +322,8 @@
           <option value="run">Run</option>
           <option value="cardio">Zone 2 Cardio</option>
           <option value="mobility">Mobility / stretch</option>
+          <option value="focus">Deep work / focus session</option>
+          <option value="meditation">Meditation / breathwork</option>
           <option value="custom">Something else…</option>
         </select>
         <button class="btn" onclick="addExtra()">Add</button>
@@ -313,6 +359,7 @@
         <button class="navbtn" onclick="jShift(1)">›</button>
       </div>
     </div>
+    <div id="j-onthisday"></div>
     <div class="card">
       <h2 style="margin-bottom:2px">Evening journal</h2>
       <div class="small" style="margin-top:0">A few honest minutes at the end of the day.</div>
@@ -321,6 +368,8 @@
         <button onclick="jMood(3)">😐</button><button onclick="jMood(4)">🙂</button>
         <button onclick="jMood(5)">😄</button>
       </div>
+      <div class="jfield" style="margin-bottom:14px"><label>What are you feeling? (pick any)</label>
+        <div id="j-emotions"></div></div>
       <div class="promptbox"><span id="j-prompt"></span>
         <div class="pr-actions"><span class="minilink" onclick="jNewPrompt()">↻ different prompt</span></div></div>
       <div class="jfield"><label>Three things you're grateful for</label>
@@ -330,8 +379,18 @@
       </div>
       <div class="jfield"><label>Win of the day</label>
         <input id="j-win" placeholder="One thing you're proud of…" oninput="jType()" onchange="jSave()"></div>
+      <div class="jfield"><label>Something you learned or noticed today</label>
+        <input id="j-learned" placeholder="A fact, an insight, a mistake worth remembering…" oninput="jType()" onchange="jSave()"></div>
+      <div class="jfield"><label>Who did you connect with today?</label>
+        <div class="connectrow">
+          <input id="j-who" placeholder="A person, or 'nobody much'…" oninput="jType()" onchange="jSave()">
+          <div class="qualitydots" id="j-quality"></div>
+        </div>
+      </div>
       <div class="jfield"><label>Your writing — go deeper than "it was fine"</label>
         <textarea class="jtext" id="j-text" placeholder="Write freely. Nobody reads this but you…" oninput="jType()" onchange="jSave()"></textarea></div>
+      <div class="jfield" style="margin-bottom:0"><label>Tag today's entry to a life area (for your Life Wheel)</label>
+        <div class="dtoggles" id="j-domains"></div></div>
       <div class="small" id="j-saved"></div>
       <div class="snapshot" id="j-snapshot"></div>
     </div>
@@ -355,11 +414,27 @@
     </div>
 
     <div class="card">
+      <h2>Values &amp; mission</h2>
+      <div class="small" style="margin-top:0">Write it once, refine it over time. Your weekly review checks your week against this.</div>
+      <div class="jfield" style="margin-top:10px"><label>Your mission — the one-line version of who you're becoming</label>
+        <textarea id="val-mission" style="min-height:60px" placeholder="e.g. Build a strong, capable body and a sharp, honest mind — and use both to provide for the people I love." onchange="saveMission()"></textarea></div>
+      <div class="jfield" style="margin-bottom:0"><label>Core values</label>
+        <div id="val-chips"></div>
+        <div class="row2" style="margin-top:6px"><input id="val-new" placeholder="e.g. Discipline, Honesty, Curiosity">
+          <button class="btn" id="val-add-btn" onclick="addValue()">Add</button></div>
+      </div>
+    </div>
+
+    <div class="card">
       <h2>Goals</h2>
       <div class="addform">
         <input id="goal-title" placeholder="Goal — e.g. Get promoted to Senior, Squat 140kg, Read 20 books this year">
         <div class="row2">
-          <select id="goal-cat"><option value="career">Career</option><option value="fitness">Fitness</option><option value="personal">Personal</option></select>
+          <select id="goal-cat">
+            <option value="physical">Physical</option><option value="mental">Mental</option>
+            <option value="emotional">Emotional</option><option value="intellectual">Intellectual</option>
+            <option value="financial">Financial</option><option value="philosophical">Philosophical</option>
+          </select>
           <input id="goal-date" type="date">
         </div>
         <button class="btn" onclick="addGoal()">+ Add goal</button>
@@ -375,6 +450,65 @@
         <button class="btn" onclick="addBook()">+ Add to reading list</button>
       </div>
       <div id="g-books"></div>
+    </div>
+
+    <div class="card">
+      <h2>Skills &amp; deliberate practice</h2>
+      <div class="small" style="margin-top:0">Reading builds knowledge; logged hours build skill. Track anything — a language, an instrument, coding, a sport.</div>
+      <div class="addform" style="margin-top:10px">
+        <input id="skill-name" placeholder="Skill — e.g. Spanish, Guitar, Public speaking">
+        <input id="skill-target" type="number" inputmode="numeric" placeholder="Target hours (e.g. 100)">
+        <button class="btn" onclick="addSkill()">+ Track this skill</button>
+      </div>
+      <div id="g-skills"></div>
+    </div>
+
+    <div class="card">
+      <h2>Decision journal</h2>
+      <div class="small" style="margin-top:0">Log the reasoning behind decisions that matter, then revisit them later to see if your judgment was right.</div>
+      <div class="addform" style="margin-top:10px">
+        <input id="dec-title" placeholder="The decision — e.g. Taking the new role">
+        <textarea id="dec-reason" style="min-height:60px" placeholder="Your reasoning right now — what you expect to happen and why"></textarea>
+        <input id="dec-revisit" type="date">
+        <button class="btn" onclick="addDecision()">+ Log decision</button>
+      </div>
+      <div id="g-decisions"></div>
+    </div>
+  </div>
+
+  <!-- MONEY -->
+  <div class="view" id="v-money">
+    <h2>Money</h2>
+    <div class="tiles" id="m-tiles"></div>
+
+    <div class="card">
+      <div class="rowline"><h2 style="margin:0">Net worth</h2><span class="small" style="margin:0" id="m-nw-latest"></span></div>
+      <div class="chartwrap" id="m-nw-chart"></div>
+      <div class="fxrow" style="margin-top:10px">
+        <input id="nw-assets" type="number" inputmode="decimal" placeholder="Total assets (£)">
+        <input id="nw-debts" type="number" inputmode="decimal" placeholder="Total debts (£)">
+      </div>
+      <button class="btn" style="margin-top:8px" onclick="addNetWorth()">+ Log snapshot for today</button>
+      <div class="small">Log monthly — a rough number tracked consistently beats a precise one tracked never.</div>
+    </div>
+
+    <div class="card">
+      <h2>Emergency fund</h2>
+      <div class="fxrow">
+        <input id="ef-current" type="number" inputmode="decimal" placeholder="Current (£)">
+        <input id="ef-target" type="number" inputmode="decimal" placeholder="Target (£)">
+      </div>
+      <button class="btn" id="ef-save-btn" style="margin-top:8px" onclick="saveEmergencyFund()">Save</button>
+      <div class="progbar" id="ef-bar" style="margin-top:10px"></div>
+      <div class="small" id="ef-status"></div>
+    </div>
+
+    <div class="card" id="m-review"></div>
+
+    <div class="card">
+      <div class="rowline"><h2 style="margin:0">Financial goals</h2>
+        <span class="minilink" onclick="switchView('growth')">Manage in Growth →</span></div>
+      <div id="m-goals"></div>
     </div>
   </div>
 
@@ -396,6 +530,11 @@
 
   <!-- PROGRESS -->
   <div class="view" id="v-prog">
+    <div class="card">
+      <div class="rowline"><h2 style="margin:0">Life wheel</h2><span class="small" style="margin:0">last 7 days</span></div>
+      <div class="radarwrap" id="p-radar"></div>
+      <div class="radarlegend" id="p-radar-legend"></div>
+    </div>
     <div class="card" id="p-review"></div>
     <div class="tiles" id="p-tiles"></div>
     <div class="card">
@@ -492,6 +631,8 @@
     <svg viewBox="0 0 24 24"><path d="M5 4h13a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5z"/><path d="M5 4v16M9 9h6M9 13h6"/></svg>Journal</button>
   <button data-v="growth" onclick="switchView('growth')">
     <svg viewBox="0 0 24 24"><path d="M12 22V10M12 10C12 6 9 3 5 3c0 4 3 7 7 7zM12 14c0-4.5 3.5-8 8-8 0 4.5-3.5 8-8 8z"/></svg>Growth</button>
+  <button data-v="money" onclick="switchView('money')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v2M12 15v2M9.5 15a2.5 2.5 0 0 0 2.5 1.5c1.5 0 2.5-.8 2.5-2s-1-1.7-2.5-2-2.5-.8-2.5-2 1-2 2.5-2a2.5 2.5 0 0 1 2.5 1.5"/></svg>Money</button>
   <button data-v="cal" onclick="switchView('cal')">
     <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Calendar</button>
   <button data-v="prog" onclick="switchView('prog')">
@@ -531,7 +672,17 @@ const DEFAULT_WEEK = {
   0:[{id:'cardio',type:'cardio',label:'Zone 2 Cardio',time:'09:00',detail:'45–60 min conversational pace — bike, row, incline walk, easy run or bag',metric:'pace'}]
 };
 const DAY_NAMES7 = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-const TYPE_LABEL = {strength:'Strength',run:'Run',cardio:'Cardio',mobility:'Mobility',custom:'Other'};
+const TYPE_LABEL = {strength:'Strength',run:'Run',cardio:'Cardio',mobility:'Mobility',custom:'Other',focus:'Focus',meditation:'Meditation'};
+const DOMAINS = [
+  {key:'physical', label:'Physical', color:'#2f6fd6'},
+  {key:'mental', label:'Mental', color:'#6d4fc2'},
+  {key:'emotional', label:'Emotional', color:'#d6336c'},
+  {key:'intellectual', label:'Intellectual', color:'#0f766e'},
+  {key:'financial', label:'Financial', color:'#b8860b'},
+  {key:'philosophical', label:'Philosophical', color:'#475569'}
+];
+function domainInfo(k){ return DOMAINS.find(d=>d.key===k) || DOMAINS[0]; }
+const EMOTIONS = ['Happy','Calm','Grateful','Excited','Proud','Content','Anxious','Stressed','Frustrated','Sad','Lonely','Tired','Angry','Overwhelmed'];
 
 /* ============ PLAN ENGINE (editable, effective-dated) ============ */
 // S.planVersions: [{from:'yyyy-mm-dd', week:{0..6:[session,...]}, workouts:{key:{name,where,ex:[[name,target],...]}}}]
@@ -567,7 +718,8 @@ const KEY = 'gtfit-v1';
 
 /* ============ STATE, MIGRATION & STORAGE ============ */
 let S = {logs:{}, habits:[], reviews:{}, programStart:null, lastDietBreak:null, sync:{token:'',gistId:'',last:null},
-  goals:[], books:[], priorities:{}, bonusLedger:[], planVersions:[]};
+  goals:[], books:[], priorities:{}, bonusLedger:[], planVersions:[],
+  finance:{snapshots:[], emergencyFund:{current:0,target:0}, checkins:{}}, skills:[], decisions:[], values:{mission:'',list:[]}};
 let persistent = true, dirty = false;
 function migrate(){
   if(!S.logs) S.logs = {};
@@ -589,6 +741,19 @@ function migrate(){
   S.planVersions.forEach(v=>{ Object.values(v.week).forEach(day=>day.forEach(s=>{
     if((s.type==='run'||s.type==='cardio') && !s.metric) s.metric='pace';
   })); });
+  // v6: six-domain taxonomy, financial module, values, decisions, skills
+  const DOMAIN_KEYS = DOMAINS.map(d=>d.key);
+  const CAT_MIGRATE = {career:'intellectual', fitness:'physical', personal:'emotional'};
+  S.goals.forEach(g=>{ if(!DOMAIN_KEYS.includes(g.cat)) g.cat = CAT_MIGRATE[g.cat] || 'physical'; });
+  S.habits.forEach(h=>{ if(!DOMAIN_KEYS.includes(h.domain)) h.domain = 'physical'; });
+  if(!S.finance || typeof S.finance!=='object') S.finance={};
+  if(!Array.isArray(S.finance.snapshots)) S.finance.snapshots=[];
+  if(!S.finance.emergencyFund) S.finance.emergencyFund={current:0,target:0};
+  if(!S.finance.checkins || typeof S.finance.checkins!=='object') S.finance.checkins={};
+  if(!Array.isArray(S.skills)) S.skills=[];
+  if(!Array.isArray(S.decisions)) S.decisions=[];
+  if(!S.values || typeof S.values!=='object') S.values={mission:'', list:[]};
+  if(!Array.isArray(S.values.list)) S.values.list=[];
   if(!S.reviews) S.reviews = {};
   if(!S.sync) S.sync = {token:'',gistId:'',last:null};
   if(!S.programStart){
@@ -732,9 +897,11 @@ const EXTRA_TYPES = {
   B:{label:'Bonus: Strength B — Lower Body', type:'strength', w:'B'},
   C:{label:'Bonus: Strength C — Upper Pull & Arms', type:'strength', w:'C'},
   D:{label:'Bonus: Strength D — Full-Body Barbell', type:'strength', w:'D'},
-  run:{label:'Bonus: Run', type:'run'},
-  cardio:{label:'Bonus: Zone 2 Cardio', type:'cardio'},
-  mobility:{label:'Bonus: Mobility / stretch', type:'mobility'}
+  run:{label:'Bonus: Run', type:'run', metric:'pace'},
+  cardio:{label:'Bonus: Zone 2 Cardio', type:'cardio', metric:'pace'},
+  mobility:{label:'Bonus: Mobility / stretch', type:'mobility'},
+  focus:{label:'Bonus: Deep Work / Focus Session', type:'focus'},
+  meditation:{label:'Bonus: Meditation / Breathwork', type:'meditation'}
 };
 function addExtra(){
   const k = key(selected);
@@ -833,6 +1000,12 @@ function renderToday(keepOpen){
           <label>Time (min)<input type="number" step="0.1" inputmode="decimal" value="${r.t||''}" onchange="setRun('${k}','${s.id}','t',this.value)"></label>
           ${paceStr?`<div class="pace">${paceStr}</div>`:''}</div>`;
       }
+    }
+    if(s.type==='focus' || s.type==='meditation'){
+      const r = (l.runs && l.runs[s.id]) || {};
+      html += `<div class="runrow">
+        <label>Minutes<input type="number" inputmode="numeric" value="${r.min||''}" onchange="setRun('${k}','${s.id}','min',this.value)"></label>
+      </div>`;
     }
     if(w){
       const openId = 'log-'+s.id;
@@ -946,7 +1119,11 @@ function addHabit(){
   const name = prompt('New habit (e.g. Creatine, Reading 20 min):');
   if(!name || !name.trim()) return;
   const num = prompt('Daily target number? Enter a number (e.g. 8000 steps) or leave blank for a simple tick:');
-  const h = {name:name.trim(), from:key(todayD())};
+  const domList = DOMAINS.map((d,i)=>(i+1)+'='+d.label).join(', ');
+  const domPick = prompt('Which life area is this? '+domList+'\n(enter a number, or leave blank for Physical)');
+  const idx = parseInt(domPick)-1;
+  const domain = (idx>=0 && idx<DOMAINS.length) ? DOMAINS[idx].key : 'physical';
+  const h = {name:name.trim(), from:key(todayD()), domain};
   if(num && parseFloat(num)>0){ h.type='number'; h.targets=[{from:key(todayD()), target:parseFloat(num)}]; }
   S.habits.push(h); save(); renderToday(true);
 }
@@ -1016,6 +1193,24 @@ function jMood(n){
   const l = dlog(key(jSel)); if(!l.journal) l.journal={};
   l.journal.mood = l.journal.mood===n ? null : n; save(); renderJournal();
 }
+function jToggleEmotion(e){
+  const l = dlog(key(jSel)); if(!l.journal) l.journal={};
+  if(!Array.isArray(l.journal.emotions)) l.journal.emotions=[];
+  const i = l.journal.emotions.indexOf(e);
+  if(i>-1) l.journal.emotions.splice(i,1); else l.journal.emotions.push(e);
+  save(); renderJournal();
+}
+function jQuality(n){
+  const l = dlog(key(jSel)); if(!l.journal) l.journal={};
+  l.journal.quality = l.journal.quality===n ? null : n; save(); renderJournal();
+}
+function jToggleDomain(dk){
+  const l = dlog(key(jSel)); if(!l.journal) l.journal={};
+  if(!Array.isArray(l.journal.domains)) l.journal.domains=[];
+  const i = l.journal.domains.indexOf(dk);
+  if(i>-1) l.journal.domains.splice(i,1); else l.journal.domains.push(dk);
+  save(); renderJournal();
+}
 let jTimer=null;
 function jType(){ clearTimeout(jTimer); jTimer=setTimeout(jSave, 800); }
 function jSave(){
@@ -1026,6 +1221,8 @@ function jSave(){
   l.journal.g1 = document.getElementById('j-g1').value;
   l.journal.g2 = document.getElementById('j-g2').value;
   l.journal.g3 = document.getElementById('j-g3').value;
+  l.journal.learned = document.getElementById('j-learned').value;
+  l.journal.who = document.getElementById('j-who').value;
   save();
   document.getElementById('j-saved').textContent = 'Saved ✓';
   setTimeout(()=>{ document.getElementById('j-saved').textContent=''; }, 1500);
@@ -1051,14 +1248,41 @@ function renderJournal(){
   document.getElementById('j-date').textContent = DOW[jSel.getDay()]+' '+jSel.getDate()+' '+MON[jSel.getMonth()].slice(0,3);
   document.getElementById('j-datesub').textContent = isSameDay(jSel,todayD())?'Today':k;
   document.querySelectorAll('#j-mood button').forEach((b,i)=>b.classList.toggle('sel', j.mood===i+1));
+  const emos = j.emotions||[];
+  document.getElementById('j-emotions').innerHTML = EMOTIONS.map(e=>
+    `<span class="emochip ${emos.includes(e)?'on':''}" onclick="jToggleEmotion('${e}')">${e}</span>`).join('');
   document.getElementById('j-prompt').textContent = '“'+PROMPTS[promptIndex(k)]+'”';
   document.getElementById('j-win').value = j.win||'';
   document.getElementById('j-text').value = j.text||'';
   document.getElementById('j-g1').value = j.g1||'';
   document.getElementById('j-g2').value = j.g2||'';
   document.getElementById('j-g3').value = j.g3||'';
+  document.getElementById('j-learned').value = j.learned||'';
+  document.getElementById('j-who').value = j.who||'';
+  const q = j.quality||0;
+  document.getElementById('j-quality').innerHTML = [1,2,3,4,5].map(n=>
+    `<span class="${n<=q?'on':''}" onclick="jQuality(${n})">${n}</span>`).join('');
+  const doms = j.domains||[];
+  document.getElementById('j-domains').innerHTML = DOMAINS.map(d=>
+    `<span class="dtoggle ${doms.includes(d.key)?'on':''}" style="${doms.includes(d.key)?'background:'+d.color+';border-color:'+d.color:''}" onclick="jToggleDomain('${d.key}')"><span class="dot2" style="background:${doms.includes(d.key)?'#fff':d.color}"></span>${d.label}</span>`).join('');
   document.getElementById('j-snapshot').textContent = daySnapshot(k);
+  renderOnThisDay();
   renderPast();
+}
+function renderOnThisDay(){
+  const box = document.getElementById('j-onthisday');
+  if(!isSameDay(jSel, todayD())){ box.innerHTML=''; return; }
+  const spans = [[1,'month'],[3,'months'],[12,'months']];
+  for(const [months] of spans){
+    const d = new Date(jSel); d.setMonth(d.getMonth()-months);
+    const j = S.logs[key(d)] && S.logs[key(d)].journal;
+    if(j && (j.text||j.win)){
+      const label = months===1?'1 month ago':months===12?'1 year ago':months+' months ago';
+      box.innerHTML = `<div class="onthisday"><b>On this day, ${label}</b>${(j.win?('“'+j.win+'” — '):'')}${(j.text||'').slice(0,140)}${(j.text||'').length>140?'…':''}</div>`;
+      return;
+    }
+  }
+  box.innerHTML='';
 }
 function renderPast(){
   const entries = sortedKeys().filter(k=>{ const j=S.logs[k].journal;
@@ -1134,7 +1358,7 @@ function setPriorityText(i,val){
   const wk = mondayKey(todayD()); S.priorities[wk][i].text = val; save();
 }
 
-function catChip(cat){ return `<span class="catchip ${cat}">${cat}</span>`; }
+function catChip(cat){ const d=domainInfo(cat); return `<span class="dchip" style="background:${d.color}">${d.label}</span>`; }
 function addGoal(){
   const title = document.getElementById('goal-title').value.trim();
   if(!title) return;
@@ -1232,9 +1456,101 @@ function renderBooks(){
   if(done.length) html += `<div class="booksec"><h3>Finished (${done.length})</h3>${done.map(row).join('')}</div>`;
   document.getElementById('g-books').innerHTML = html || '<div class="chart-empty">Add a book above to start your list.</div>';
 }
+/* ============ VALUES & MISSION ============ */
+function saveMission(){ S.values.mission = document.getElementById('val-mission').value; save(); }
+function addValue(){
+  const v = document.getElementById('val-new').value.trim();
+  if(!v) return;
+  S.values.list.push(v); document.getElementById('val-new').value=''; save(); renderValues();
+}
+function removeValue(i){ S.values.list.splice(i,1); save(); renderValues(); }
+function renderValues(){
+  document.getElementById('val-mission').value = S.values.mission||'';
+  document.getElementById('val-chips').innerHTML = S.values.list.map((v,i)=>
+    `<span class="valchip">${v.replace(/</g,'&lt;')}<span class="x" onclick="removeValue(${i})">✕</span></span>`).join('')
+    || '<div class="chart-empty">No values listed yet — add the 3–5 that actually govern your choices.</div>';
+}
+
+/* ============ SKILLS / DELIBERATE PRACTICE ============ */
+function addSkill(){
+  const name = document.getElementById('skill-name').value.trim();
+  if(!name) return;
+  const target = parseFloat(document.getElementById('skill-target').value) || 100;
+  S.skills.push({id:'sk'+Date.now().toString(36), name, target, hours:0, sessions:[]});
+  document.getElementById('skill-name').value=''; document.getElementById('skill-target').value='';
+  save(); renderSkills();
+}
+function logSkillHours(id){
+  const sk = S.skills.find(s=>s.id===id); if(!sk) return;
+  const h = prompt('How many hours did you just practice '+sk.name+'?','1');
+  const hrs = parseFloat(h);
+  if(!(hrs>0)) return;
+  sk.hours = Math.round((sk.hours+hrs)*100)/100;
+  sk.sessions.push({k:key(todayD()), hours:hrs});
+  awardPoints(5, 'Practice: '+sk.name+' ('+hrs+'h)');
+  save(); renderSkills();
+}
+function removeSkill(id){
+  if(confirm('Remove this skill?')){ S.skills = S.skills.filter(s=>s.id!==id); save(); renderSkills(); }
+}
+function renderSkills(){
+  let html = S.skills.map(sk=>{
+    const pct = Math.min(100, Math.round(sk.hours/sk.target*100));
+    return `<div class="skillitem">
+      <div class="stitle">${sk.name.replace(/</g,'&lt;')}</div>
+      <div class="gmeta">${sk.hours}h of ${sk.target}h · ${sk.sessions.length} session${sk.sessions.length===1?'':'s'} logged</div>
+      <div class="progbar"><div class="fill" style="width:${pct}%"></div></div>
+      <div class="goalbtns">
+        <button onclick="logSkillHours('${sk.id}')">+ Log practice</button>
+        <button onclick="removeSkill('${sk.id}')">Delete</button>
+      </div></div>`;
+  }).join('');
+  document.getElementById('g-skills').innerHTML = html || '<div class="chart-empty">Track a skill above — deliberate hours compound the same way training does.</div>';
+}
+
+/* ============ DECISION JOURNAL ============ */
+function addDecision(){
+  const title = document.getElementById('dec-title').value.trim();
+  const reason = document.getElementById('dec-reason').value.trim();
+  if(!title) return;
+  const revisit = document.getElementById('dec-revisit').value || null;
+  S.decisions.push({id:'d'+Date.now().toString(36), title, reason, revisit, k:key(todayD()), outcome:null});
+  document.getElementById('dec-title').value=''; document.getElementById('dec-reason').value=''; document.getElementById('dec-revisit').value='';
+  awardPoints(5, 'Logged decision: '+title);
+  save(); renderDecisions();
+}
+function reflectDecision(id){
+  const d = S.decisions.find(d=>d.id===id); if(!d) return;
+  const outcome = prompt('Looking back on "'+d.title+'" — how did it actually go? Were you right?');
+  if(outcome===null || !outcome.trim()) return;
+  d.outcome = outcome.trim(); d.reflectedAt = key(todayD());
+  awardPoints(5, 'Reflected on decision: '+d.title);
+  save(); renderDecisions();
+}
+function removeDecision(id){
+  if(confirm('Delete this decision?')){ S.decisions = S.decisions.filter(d=>d.id!==id); save(); renderDecisions(); }
+}
+function renderDecisions(){
+  const sorted = [...S.decisions].sort((a,b)=>b.k.localeCompare(a.k));
+  const t = key(todayD());
+  let html = sorted.map(d=>{
+    const due = d.revisit && d.revisit<=t && !d.outcome;
+    return `<div class="decitem">
+      <div class="dtitle">${d.title.replace(/</g,'&lt;')}${due?'<span class="duechip">Revisit due</span>':''}</div>
+      <div class="dreason">${(d.reason||'').replace(/</g,'&lt;')}</div>
+      <div class="gmeta">${d.k}${d.revisit?' · revisit '+d.revisit:''}</div>
+      ${d.outcome?`<div class="doutcome"><b>Reflection:</b> ${d.outcome.replace(/</g,'&lt;')}</div>`:''}
+      <div class="goalbtns">
+        ${!d.outcome?`<button onclick="reflectDecision('${d.id}')">Reflect now</button>`:''}
+        <button onclick="removeDecision('${d.id}')">Delete</button>
+      </div></div>`;
+  }).join('');
+  document.getElementById('g-decisions').innerHTML = html || '<div class="chart-empty">Log a decision that matters — revisiting it later is how judgment actually improves.</div>';
+}
+
 function renderGrowth(){
   document.getElementById('g-quote').textContent = QUOTES[quoteIndex()];
-  renderPriorities(); renderGoals(); renderBooks();
+  renderPriorities(); renderGoals(); renderBooks(); renderValues(); renderSkills(); renderDecisions();
 }
 
 /* ============ CALENDAR ============ */
@@ -1334,6 +1650,159 @@ function saveReview(rate){
   document.getElementById('rev-out').innerHTML = `<div class="rec"><b>Coach says:</b> ${rec}</div>`;
 }
 
+/* ============ MONEY ============ */
+function addNetWorth(){
+  const assets = parseFloat(document.getElementById('nw-assets').value);
+  const debts = parseFloat(document.getElementById('nw-debts').value)||0;
+  if(!(assets>=0)){ alert('Enter your total assets at least.'); return; }
+  const k = key(todayD());
+  S.finance.snapshots = S.finance.snapshots.filter(s=>s.k!==k);
+  S.finance.snapshots.push({k, assets, debts});
+  S.finance.snapshots.sort((a,b)=>a.k<b.k?-1:1);
+  document.getElementById('nw-assets').value=''; document.getElementById('nw-debts').value='';
+  save(); renderMoney();
+}
+function saveEmergencyFund(){
+  const cur = parseFloat(document.getElementById('ef-current').value);
+  const tgt = parseFloat(document.getElementById('ef-target').value);
+  if(cur>=0) S.finance.emergencyFund.current = cur;
+  if(tgt>=0) S.finance.emergencyFund.target = tgt;
+  save(); renderMoney();
+}
+let moneyReviewOpen=false;
+function renderMoneyReview(){
+  const el = document.getElementById('m-review');
+  const wk = mondayKey(todayD());
+  const co = S.finance.checkins[wk];
+  let head = `<div class="rowline"><h2 style="margin:0">Weekly money check-in</h2>
+    <span class="minilink" onclick="moneyReviewOpen=!moneyReviewOpen; renderMoneyReview()">${moneyReviewOpen?'Close':(co?'Redo':'Start check-in')}</span></div>
+    <div class="small" style="margin-top:4px">${co? 'Checked in this week ✓' : 'Two minutes, every Sunday.'}</div>`;
+  if(!moneyReviewOpen){ el.innerHTML = head; return; }
+  const form = `
+    <div class="rev-q"><label>Any impulse or regretted spending this week?</label>
+      <select id="mrev-impulse"><option value="0">No, stayed on plan</option><option value="1">A little</option><option value="2">Yes, notably</option></select></div>
+    <div class="rev-q"><label>Did you hit your savings target this week?</label>
+      <select id="mrev-savings"><option value="1">Yes</option><option value="0">No</option><option value="2">No target set yet</option></select></div>
+    <button class="btn" onclick="saveMoneyReview()">Get recommendation &amp; save</button>
+    <div id="mrev-out"></div>`;
+  el.innerHTML = head + form;
+}
+function saveMoneyReview(){
+  const impulse = +document.getElementById('mrev-impulse').value;
+  const savings = +document.getElementById('mrev-savings').value;
+  let rec;
+  if(savings===2) rec = 'Set a concrete weekly or monthly savings number — even a small one. Without a target there\'s nothing to hit.';
+  else if(savings===1 && impulse===0) rec = 'Clean week — target hit, no regretted spending. This is what consistency looks like. Keep the system boring.';
+  else if(savings===0 && impulse>=1) rec = 'Missed the target and spent off-plan in the same week — those two are usually connected. Look at what triggered the impulse spending before next week starts.';
+  else if(savings===0) rec = 'Target missed this week. Not a crisis on its own — check if the target itself is realistic, or if this was a one-off.';
+  else rec = 'Target hit despite some impulse spending — worth noticing what that spending was, so it doesn\'t creep upward.';
+  S.finance.checkins[mondayKey(todayD())] = {impulse, savings, rec, k:key(todayD())};
+  save();
+  renderMoney();
+  document.getElementById('mrev-out').innerHTML = `<div class="rec"><b>Coach says:</b> ${rec}</div>`;
+}
+function renderMoney(){
+  const snaps = S.finance.snapshots;
+  const pts = snaps.map(s=>({x:fromKey(s.k), y:s.assets-s.debts}));
+  const latest = snaps.length? snaps[snaps.length-1] : null;
+  document.getElementById('m-nw-latest').textContent = latest? ('net '+(latest.assets-latest.debts).toLocaleString()) : '';
+  document.getElementById('m-nw-chart').innerHTML = lineChart(pts, {color:'#b8860b'});
+  const ef = S.finance.emergencyFund;
+  document.getElementById('ef-current').value = ef.current||'';
+  document.getElementById('ef-target').value = ef.target||'';
+  const efPct = ef.target>0 ? Math.min(100, Math.round(ef.current/ef.target*100)) : 0;
+  document.getElementById('ef-bar').innerHTML = `<div class="fill" style="width:${efPct}%; background:var(--d-financial)"></div>`;
+  document.getElementById('ef-status').textContent = ef.target>0
+    ? efPct+'% funded ('+ef.current.toLocaleString()+' of '+ef.target.toLocaleString()+')'
+    : 'Set a target — 3–6 months of essential expenses is the usual rule of thumb.';
+  renderMoneyReview();
+  const moneyGoals = S.goals.filter(g=>g.cat==='financial');
+  document.getElementById('m-goals').innerHTML = moneyGoals.length
+    ? moneyGoals.map(g=>`<div class="goalitem ${g.done?'done':''}"><div class="gtitle">${g.done?'✓ ':''}${g.title.replace(/</g,'&lt;')}</div>
+        <div class="progbar"><div class="fill" style="width:${g.progress}%"></div></div></div>`).join('')
+    : '<div class="chart-empty">No financial goals yet — add one in Growth and tag it Financial.</div>';
+  const checkinsThisMonth = Object.values(S.finance.checkins).filter(c=>c.k && c.k.slice(0,7)===key(todayD()).slice(0,7)).length;
+  document.getElementById('m-tiles').innerHTML = `
+    <div class="tile"><div class="label">Net worth</div><div class="value">${latest?(latest.assets-latest.debts).toLocaleString():'—'}</div><div class="unit">latest snapshot</div></div>
+    <div class="tile"><div class="label">Emergency fund</div><div class="value">${efPct}%</div><div class="unit">funded</div></div>
+    <div class="tile"><div class="label">Check-ins</div><div class="value">${checkinsThisMonth}</div><div class="unit">this month</div></div>
+    <div class="tile"><div class="label">Money goals</div><div class="value">${moneyGoals.filter(g=>g.done).length}/${moneyGoals.length}</div><div class="unit">complete</div></div>`;
+}
+
+/* ============ LIFE WHEEL ============ */
+function domainScore(dkey, windowDays){
+  const end = todayD();
+  const keys = [];
+  for(let i=0;i<windowDays;i++){ const d=new Date(end); d.setDate(end.getDate()-i); keys.push(key(d)); }
+  const comps = [];
+  const domHabits = S.habits.filter(h=>h.domain===dkey);
+  if(domHabits.length){
+    let done=0, total=0;
+    domHabits.forEach(h=>keys.forEach(k=>{ if(habitActive(h,k)){ total++; if(habitDone(h,S.logs[k],k)) done++; } }));
+    if(total) comps.push(done/total*100);
+  }
+  const domGoals = S.goals.filter(g=>g.cat===dkey);
+  if(domGoals.length){ comps.push(domGoals.reduce((a,g)=>a+(g.done?100:g.progress),0)/domGoals.length); }
+  const journalTouch = keys.filter(k=>S.logs[k] && S.logs[k].journal && (S.logs[k].journal.domains||[]).includes(dkey)).length / keys.length * 100;
+  comps.push(journalTouch);
+  if(dkey==='physical'){
+    let done=0, total=0;
+    keys.forEach(k=>{ const d=fromKey(k); const plan=planAt(k).week[d.getDay()]||[]; const l=S.logs[k];
+      total+=plan.length; if(l&&l.sess) plan.forEach(s=>{ if(l.sess[s.id]==='done') done++; }); });
+    if(total) comps.push(done/total*100);
+  }
+  if(dkey==='financial'){
+    const wk = mondayKey(todayD());
+    comps.push(S.finance.checkins[wk] ? 100 : 0);
+  }
+  if(dkey==='intellectual'){
+    const practiced = S.skills.some(sk=>sk.sessions.some(ses=>keys.includes(ses.k)));
+    const readSomething = S.books.some(b=>b.status==='reading');
+    comps.push((practiced||readSomething) ? 100 : 0);
+  }
+  if(dkey==='mental'){
+    let mins=0;
+    keys.forEach(k=>{ const l=S.logs[k]; if(l&&l.runs) Object.entries(l.runs).forEach(([id,r])=>{
+      const d=fromKey(k); const sess=[...(planAt(k).week[d.getDay()]||[]),...((l.extra)||[])].find(s=>s.id===id);
+      if(sess && (sess.type==='focus'||sess.type==='meditation') && r.min) mins+=r.min; }); });
+    comps.push(Math.min(100, mins/60*100));
+  }
+  if(dkey==='emotional'){
+    const withEmo = keys.filter(k=>S.logs[k] && S.logs[k].journal && (S.logs[k].journal.emotions||[]).length).length;
+    comps.push(withEmo/keys.length*100);
+  }
+  if(dkey==='philosophical'){
+    const decided = S.decisions.some(d=>keys.includes(d.k) || (d.reflectedAt && keys.includes(d.reflectedAt)));
+    const hasValues = S.values.mission || S.values.list.length;
+    comps.push(decided?100:(hasValues?40:0));
+  }
+  return comps.length? Math.round(comps.reduce((a,b)=>a+b,0)/comps.length) : 0;
+}
+function radarChart(scores){
+  const W=300,H=300,cx=150,cy=150,R=110,N=DOMAINS.length;
+  const angle=i=>-Math.PI/2 + i*(2*Math.PI/N);
+  const pt=(i,r)=>[cx+r*Math.cos(angle(i)), cy+r*Math.sin(angle(i))];
+  const rings=[0.25,0.5,0.75,1].map(f=>{
+    const p=DOMAINS.map((d,i)=>pt(i,R*f).join(',')).join(' ');
+    return `<polygon points="${p}" fill="none" stroke="#e3e7ee" stroke-width="1"/>`;
+  }).join('');
+  const axes = DOMAINS.map((d,i)=>{ const [x,y]=pt(i,R); return `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#e3e7ee" stroke-width="1"/>`; }).join('');
+  const dataPts = DOMAINS.map((d,i)=>pt(i, R*(scores[d.key]||0)/100));
+  const dataPoly = dataPts.map(p=>p.join(',')).join(' ');
+  const dots = DOMAINS.map((d,i)=>`<circle cx="${dataPts[i][0]}" cy="${dataPts[i][1]}" r="4" fill="${d.color}"/>`).join('');
+  const labels = DOMAINS.map((d,i)=>{ const [x,y]=pt(i, R+22);
+    return `<text x="${x}" y="${y}" font-size="11" font-weight="700" fill="${d.color}" text-anchor="middle" dominant-baseline="middle">${d.label}</text>`; }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="life wheel">${rings}${axes}
+    <polygon points="${dataPoly}" fill="#2f6fd6" fill-opacity="0.18" stroke="#2f6fd6" stroke-width="2"/>
+    ${dots}${labels}</svg>`;
+}
+function renderLifeWheel(){
+  const scores = {}; DOMAINS.forEach(d=>scores[d.key]=domainScore(d.key,7));
+  document.getElementById('p-radar').innerHTML = radarChart(scores);
+  document.getElementById('p-radar-legend').innerHTML = DOMAINS.map(d=>
+    `<div class="rl"><span class="sw" style="background:${d.color}"></span>${d.label} <b style="margin-left:auto">${scores[d.key]}</b></div>`).join('');
+}
+
 /* ============ PROGRESS ============ */
 let progTimer=null;
 function renderProgressSoon(){ clearTimeout(progTimer); progTimer=setTimeout(()=>{ if(document.getElementById('v-prog').classList.contains('show')) renderProgress(); }, 400); }
@@ -1419,6 +1888,7 @@ function reportCard(){
 }
 function renderProgress(){
   renderReview();
+  renderLifeWheel();
   const wk = weekSummary();
   const ks = sortedKeys();
   const weights = ks.filter(k=>S.logs[k].weight).map(k=>({x:fromKey(k), y:S.logs[k].weight}));
@@ -1504,6 +1974,8 @@ const NEW_SESSION_DEFAULTS = {
   run:{label:'Run', time:'06:15', metric:'pace'},
   cardio:{label:'Cardio', time:'09:00', metric:'pace'},
   mobility:{label:'Mobility', time:'06:45', detail:'20 min mobility work'},
+  focus:{label:'Deep Work / Focus Session', time:'09:00', detail:'Undistracted focused work'},
+  meditation:{label:'Meditation / Breathwork', time:'06:30', detail:'Sit, breathe, be still'},
   custom:{label:'Session', time:'12:00', detail:''}
 };
 function renderPlanEditor(){
@@ -1536,7 +2008,8 @@ function renderPlanEditor(){
       <label class="small" style="margin:0">Add a session to ${DAY_NAMES7[editDay]}</label>
       <select id="newsess-type" onchange="onNewSessTypeChange()">
         <option value="strength">Strength</option><option value="run">Run</option><option value="cardio">Cardio</option>
-        <option value="mobility">Mobility</option><option value="custom">Other</option>
+        <option value="mobility">Mobility</option><option value="focus">Deep Work / Focus</option>
+        <option value="meditation">Meditation / Breathwork</option><option value="custom">Other</option>
       </select>
       <input id="newsess-label" placeholder="Label">
       <div class="row2">
@@ -1548,7 +2021,10 @@ function renderPlanEditor(){
   onNewSessTypeChange();
   Object.keys(pendingExEditors).forEach(i=>{ if(pendingExEditors[i]) renderExEditor(parseInt(i)); });
 }
-function catChip2(type){ return `<span class="catchip ${type==='strength'?'career':type==='mobility'?'fitness':'personal'}">${TYPE_LABEL[type]||type}</span>`; }
+function catChip2(type){
+  const cls = type==='strength'?'career':type==='mobility'?'fitness':(type==='focus'||type==='meditation')?'mind':'personal';
+  return `<span class="catchip ${cls}">${TYPE_LABEL[type]||type}</span>`;
+}
 function onNewSessTypeChange(){
   const t = document.getElementById('newsess-type').value;
   const d = NEW_SESSION_DEFAULTS[t];
@@ -1570,6 +2046,8 @@ function addSessionToDay(){
     sess.w = wkey; sess.where='Home gym'; sess.type='strength';
   } else if(t==='run'||t==='cardio'){
     sess.metric = document.getElementById('newsess-metric').value;
+  } else if(t==='focus'||t==='meditation'){
+    sess.detail = NEW_SESSION_DEFAULTS[t].detail;
   } else {
     sess.detail = t==='custom' ? '' : NEW_SESSION_DEFAULTS.mobility.detail;
   }
@@ -1637,7 +2115,7 @@ function removeExercise(i, xi){
 
 /* ============ CALENDAR (.ics) EXPORT — built live from the current plan ============ */
 const ICS_BYDAY = {0:'SU',1:'MO',2:'TU',3:'WE',4:'TH',5:'FR',6:'SA'};
-const ICS_DUR = {strength:75, run:35, cardio:60, mobility:20};
+const ICS_DUR = {strength:75, run:35, cardio:60, mobility:20, focus:45, meditation:15};
 function downloadICS(){
   const P = planToday();
   const nextDow=(dow)=>{ const d=todayD(); while(d.getDay()!==dow) d.setDate(d.getDate()+1);
@@ -1758,9 +2236,10 @@ function switchView(v){
   if(v==='journal') renderJournal();
   if(v==='plan') renderPlan();
   if(v==='growth') renderGrowth();
+  if(v==='money') renderMoney();
   window.scrollTo(0,0);
 }
-function renderAll(){ renderToday(); renderCal(); renderProgress(); renderPlan(); renderJournal(); renderGrowth(); }
+function renderAll(){ renderToday(); renderCal(); renderProgress(); renderPlan(); renderJournal(); renderGrowth(); renderMoney(); }
 load(); renderAll();
 </script>
 </body>
