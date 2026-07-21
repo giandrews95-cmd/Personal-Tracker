@@ -429,6 +429,10 @@
     <h2>The plan</h2>
     <div class="card" id="plan-ref"></div>
     <div class="card">
+      <h2>Edit your plan</h2>
+      <div id="plan-editor"></div>
+    </div>
+    <div class="card">
       <h2>Nutrition targets</h2>
       <div class="tiles" style="margin-bottom:0">
         <div class="tile"><div class="label">Calories</div><div class="value">2,300</div><div class="unit">kcal / day</div></div>
@@ -497,8 +501,8 @@
 </div>
 
 <script>
-/* ============ PROGRAM DATA ============ */
-const WORKOUTS = {
+/* ============ PROGRAM DATA (defaults — the live plan is editable, see PLAN ENGINE) ============ */
+const DEFAULT_WORKOUTS = {
   A:{name:'Strength A — Upper Push', where:'Home gym', ex:[
     ['Flat DB bench press','4 × 6–8'],['Incline DB press','3 × 8–10'],['Chest press / cable fly','3 × 10–12'],
     ['Seated DB shoulder press','4 × 6–8'],['DB lateral raise','4 × 12–15'],['Triceps pushdown','3 × 10–12'],
@@ -514,18 +518,48 @@ const WORKOUTS = {
     ['Back squat (full depth)','5×5 heavy / 4×8 vol'],['Barbell Romanian deadlift','3 × 8'],['Barbell bench press','4 × 6'],
     ['Weighted pull-up','4 × 6–8'],['Barbell overhead press','3 × 8'],["Farmer's carry",'3 × 40 m']]}
 };
-const WEEK = {
+const DEFAULT_WEEK = {
   1:[{id:'mob',type:'mobility',label:'Mobility — Shoulders & Thoracic',time:'06:45',detail:'20 min: cat-cow, thoracic ext, band work, wall slides, pec stretch'},
-     {id:'str',type:'strength',label:'Strength A — Upper Push',time:'17:30',w:'A'}],
-  2:[{id:'run',type:'run',label:'Sprint Intervals',time:'06:15',detail:'10 min warm-up · 8–10 × 30 s sprint / 90 s walk · cool-down'}],
+     {id:'str',type:'strength',label:'Strength A — Upper Push',time:'17:30',w:'A',where:'Home gym'}],
+  2:[{id:'run',type:'run',label:'Sprint Intervals',time:'06:15',detail:'10 min warm-up · 8–10 × 30 s sprint / walk-back recovery · cool-down',metric:'lengths'}],
   3:[{id:'mob',type:'mobility',label:'Mobility — Hips & Ankles',time:'06:45',detail:'20 min: 90/90, world’s greatest, couch stretch, deep squat, ankle rocks'},
-     {id:'str',type:'strength',label:'Strength B — Lower Body',time:'17:30',w:'B'}],
-  4:[{id:'run',type:'run',label:'Steady Tempo Run',time:'06:15',detail:'10 easy · 15–20 tempo · 8–10 easy (or all easy if legs are gone)'}],
+     {id:'str',type:'strength',label:'Strength B — Lower Body',time:'17:30',w:'B',where:'Home gym'}],
+  4:[{id:'run',type:'run',label:'Steady Tempo Run',time:'06:15',detail:'10 easy · 15–20 tempo · 8–10 easy (or all easy if legs are gone)',metric:'pace'}],
   5:[{id:'mob',type:'mobility',label:'Mobility — Full-Body Flow & Lats',time:'06:45',detail:'20 min: dog flow, lat stretch, dead hangs, hamstring floss, spiderman'},
-     {id:'str',type:'strength',label:'Strength C — Upper Pull & Arms',time:'17:30',w:'C'}],
-  6:[{id:'str',type:'strength',label:'Strength D — Full-Body Barbell',time:'09:00',w:'D'}],
-  0:[{id:'cardio',type:'cardio',label:'Zone 2 Cardio',time:'AM',detail:'45–60 min conversational pace — bike, row, incline walk, easy run or bag'}]
+     {id:'str',type:'strength',label:'Strength C — Upper Pull & Arms',time:'17:30',w:'C',where:'Home gym'}],
+  6:[{id:'str',type:'strength',label:'Strength D — Full-Body Barbell',time:'09:00',w:'D',where:'Commercial gym'}],
+  0:[{id:'cardio',type:'cardio',label:'Zone 2 Cardio',time:'09:00',detail:'45–60 min conversational pace — bike, row, incline walk, easy run or bag',metric:'pace'}]
 };
+const DAY_NAMES7 = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const TYPE_LABEL = {strength:'Strength',run:'Run',cardio:'Cardio',mobility:'Mobility',custom:'Other'};
+
+/* ============ PLAN ENGINE (editable, effective-dated) ============ */
+// S.planVersions: [{from:'yyyy-mm-dd', week:{0..6:[session,...]}, workouts:{key:{name,where,ex:[[name,target],...]}}}]
+// Editing the plan clones the latest version (or mutates it if already dated today) so history stays accurate.
+function seedPlan(){
+  return [{from:'1970-01-01', week:JSON.parse(JSON.stringify(DEFAULT_WEEK)), workouts:JSON.parse(JSON.stringify(DEFAULT_WORKOUTS))}];
+}
+function planAt(k){
+  let v = S.planVersions[0];
+  for(const ver of S.planVersions){ if(ver.from<=k) v=ver; else break; }
+  return v;
+}
+function planToday(){ return planAt(key(todayD())); }
+function latestPlan(){ return S.planVersions[S.planVersions.length-1]; }
+function editablePlan(){
+  const tk = key(todayD());
+  let last = latestPlan();
+  if(last.from===tk) return last;
+  const clone = {from:tk, week:JSON.parse(JSON.stringify(last.week)), workouts:JSON.parse(JSON.stringify(last.workouts))};
+  S.planVersions.push(clone);
+  S.planVersions.sort((a,b)=>a.from<b.from?-1:1);
+  return clone;
+}
+function allWorkoutExerciseNames(){
+  const seen=new Set(); const out=[];
+  S.planVersions.forEach(v=>Object.values(v.workouts).forEach(w=>w.ex.forEach(([e])=>{ if(!seen.has(e)){seen.add(e); out.push(e);} })));
+  return out;
+}
 const DEFAULT_HABITS = [
   {name:'Protein ~185 g'},{name:'Calories on target (~2,300)'},{name:'Sleep 7.5 h+'},
   {name:'8k+ steps',type:'number',target:8000,unit:'steps'},{name:'3 L water'}];
@@ -533,7 +567,7 @@ const KEY = 'gtfit-v1';
 
 /* ============ STATE, MIGRATION & STORAGE ============ */
 let S = {logs:{}, habits:[], reviews:{}, programStart:null, lastDietBreak:null, sync:{token:'',gistId:'',last:null},
-  goals:[], books:[], priorities:{}, bonusLedger:[]};
+  goals:[], books:[], priorities:{}, bonusLedger:[], planVersions:[]};
 let persistent = true, dirty = false;
 function migrate(){
   if(!S.logs) S.logs = {};
@@ -550,6 +584,11 @@ function migrate(){
   if(!Array.isArray(S.books)) S.books=[];
   if(!S.priorities || typeof S.priorities!=='object') S.priorities={};
   if(!Array.isArray(S.bonusLedger)) S.bonusLedger=[];
+  // v5: editable plan engine
+  if(!Array.isArray(S.planVersions) || !S.planVersions.length) S.planVersions = seedPlan();
+  S.planVersions.forEach(v=>{ Object.values(v.week).forEach(day=>day.forEach(s=>{
+    if((s.type==='run'||s.type==='cardio') && !s.metric) s.metric='pace';
+  })); });
   if(!S.reviews) S.reviews = {};
   if(!S.sync) S.sync = {token:'',gistId:'',last:null};
   if(!S.programStart){
@@ -725,7 +764,7 @@ function awardPoints(pts, label){
 }
 function dayPoints(k){
   const l = S.logs[k];
-  const d = fromKey(k), plan = WEEK[d.getDay()]||[];
+  const d = fromKey(k), plan = planAt(k).week[d.getDay()]||[];
   let pts = ledgerPoints(k);
   if(!l) return pts;
   plan.forEach(s=>{ if(l.sess && l.sess[s.id]==='done') pts+=10; });
@@ -753,7 +792,7 @@ function allPointKeys(){
 }
 function totalPoints(){ return allPointKeys().reduce((a,k)=>a+dayPoints(k),0); }
 function renderToday(keepOpen){
-  const k = key(selected), dow = selected.getDay(), plan = WEEK[dow]||[], l = S.logs[k]||{sess:{},lifts:{},habits:{}};
+  const k = key(selected), dow = selected.getDay(), P = planAt(k), plan = P.week[dow]||[], l = S.logs[k]||{sess:{},lifts:{},habits:{}};
   document.getElementById('t-date').textContent = DOW[dow]+' '+selected.getDate()+' '+MON[selected.getMonth()].slice(0,3);
   document.getElementById('t-datesub').textContent = (isSameDay(selected,todayD())?'Today · ':'')+'Week '+weekNum(selected);
   document.getElementById('t-deload').innerHTML = isDeload(selected)
@@ -762,7 +801,7 @@ function renderToday(keepOpen){
   const extras = (l.extra||[]).map((e,i)=>Object.assign({bonus:true, bi:i}, e));
   for(const s of [...plan, ...extras]){
     const st = l.sess && l.sess[s.id];
-    const w = s.w ? WORKOUTS[s.w] : null;
+    const w = s.w ? P.workouts[s.w] : null;
     const chip = s.bonus ? `<span class="bonuschip">BONUS +15</span>` : '';
     const skipBtn = s.bonus
       ? `<button onclick="removeExtra('${k}',${s.bi})">✕</button>`
@@ -779,12 +818,21 @@ function renderToday(keepOpen){
       </div>`;
     if(s.type==='run' || s.type==='cardio'){
       const r = (l.runs && l.runs[s.id]) || {};
-      const pace = (r.d>0 && r.t>0) ? (r.t/r.d) : null;
-      const paceStr = pace ? Math.floor(pace)+':'+String(Math.round((pace%1)*60)).padStart(2,'0')+' /km' : '';
-      html += `<div class="runrow">
-        <label>Distance (km)<input type="number" step="0.1" inputmode="decimal" value="${r.d||''}" onchange="setRun('${k}','${s.id}','d',this.value)"></label>
-        <label>Time (min)<input type="number" step="0.1" inputmode="decimal" value="${r.t||''}" onchange="setRun('${k}','${s.id}','t',this.value)"></label>
-        ${paceStr?`<div class="pace">${paceStr}</div>`:''}</div>`;
+      if(s.metric==='lengths'){
+        const perLen = (r.len>0 && r.t>0) ? (r.t*60/r.len) : null;
+        const perLenStr = perLen ? Math.floor(perLen)+':'+String(Math.round(perLen%60)).padStart(2,'0')+' /length' : '';
+        html += `<div class="runrow">
+          <label>Lengths<input type="number" inputmode="numeric" value="${r.len||''}" onchange="setRun('${k}','${s.id}','len',this.value)"></label>
+          <label>Time (min)<input type="number" step="0.1" inputmode="decimal" value="${r.t||''}" onchange="setRun('${k}','${s.id}','t',this.value)"></label>
+          ${perLenStr?`<div class="pace">${perLenStr}</div>`:''}</div>`;
+      }else{
+        const pace = (r.d>0 && r.t>0) ? (r.t/r.d) : null;
+        const paceStr = pace ? Math.floor(pace)+':'+String(Math.round((pace%1)*60)).padStart(2,'0')+' /km' : '';
+        html += `<div class="runrow">
+          <label>Distance (km)<input type="number" step="0.1" inputmode="decimal" value="${r.d||''}" onchange="setRun('${k}','${s.id}','d',this.value)"></label>
+          <label>Time (min)<input type="number" step="0.1" inputmode="decimal" value="${r.t||''}" onchange="setRun('${k}','${s.id}','t',this.value)"></label>
+          ${paceStr?`<div class="pace">${paceStr}</div>`:''}</div>`;
+      }
     }
     if(w){
       const openId = 'log-'+s.id;
@@ -914,7 +962,7 @@ function weekSummary(){
   let done=0, total=0;
   for(let i=0;i<7;i++){
     const d=new Date(mon); d.setDate(mon.getDate()+i);
-    const plan=WEEK[d.getDay()]||[]; const l=S.logs[key(d)];
+    const plan=planAt(key(d)).week[d.getDay()]||[]; const l=S.logs[key(d)];
     total+=plan.length;
     if(l) plan.forEach(s=>{ if(l.sess && l.sess[s.id]==='done') done++; });
   }
@@ -986,7 +1034,7 @@ function jSave(){
 }
 function daySnapshot(k){
   const l = S.logs[k]; const d = fromKey(k);
-  const plan = WEEK[d.getDay()]||[];
+  const plan = planAt(k).week[d.getDay()]||[];
   const done = plan.filter(s=>l && l.sess && l.sess[s.id]==='done').length;
   const extras = ((l&&l.extra)||[]).filter(e=>l.sess && l.sess[e.id]==='done').length;
   const active = S.habits.filter(h=>habitActive(h,k));
@@ -1200,7 +1248,7 @@ function renderCal(){
   const today = todayD();
   for(let d=1; d<=dim; d++){
     const date = new Date(calMonth.getFullYear(), calMonth.getMonth(), d);
-    const k = key(date), plan = WEEK[date.getDay()]||[], l = S.logs[k];
+    const k = key(date), plan = planAt(k).week[date.getDay()]||[], l = S.logs[k];
     const isToday = isSameDay(date, today), past = date < today;
     let dots = plan.map(s=>{
       const st = l && l.sess && l.sess[s.id];
@@ -1291,7 +1339,7 @@ let progTimer=null;
 function renderProgressSoon(){ clearTimeout(progTimer); progTimer=setTimeout(()=>{ if(document.getElementById('v-prog').classList.contains('show')) renderProgress(); }, 400); }
 function streak(){
   let n=0; const d=todayD();
-  const complete = dt=>{ const plan=WEEK[dt.getDay()]||[]; const l=S.logs[key(dt)];
+  const complete = dt=>{ const plan=planAt(key(dt)).week[dt.getDay()]||[]; const l=S.logs[key(dt)];
     return plan.length>0 && l && plan.every(s=> l.sess && l.sess[s.id]==='done'); };
   if(!complete(d)) d.setDate(d.getDate()-1);
   while(complete(d)){ n++; d.setDate(d.getDate()-1); }
@@ -1387,11 +1435,12 @@ function renderProgress(){
   document.getElementById('p-w-latest').textContent = latestW? ('latest '+latestW+' lb') : '';
   document.getElementById('p-weight-chart').innerHTML = lineChart(weights, {color:'#2f6fd6'});
   const sel = document.getElementById('p-ex-select');
-  if(!sel.options.length){
-    const seen=new Set();
-    Object.values(WORKOUTS).forEach(w=>w.ex.forEach(([e])=>{ if(!seen.has(e)){ seen.add(e);
-      const o=document.createElement('option'); o.value=e; o.textContent=e; sel.appendChild(o);} }));
-    sel.value='Back squat (full depth)';
+  const names = allWorkoutExerciseNames();
+  const prevSel = sel.value;
+  if(sel.options.length !== names.length || names.some((n,i)=>sel.options[i] && sel.options[i].value!==n)){
+    sel.innerHTML = names.map(e=>`<option value="${e.replace(/"/g,'&quot;')}">${e}</option>`).join('');
+    if(names.includes(prevSel)) sel.value = prevSel;
+    else if(names.includes('Back squat (full depth)')) sel.value = 'Back squat (full depth)';
   }
   const exName = sel.value;
   const liftPts=[];
@@ -1419,20 +1468,20 @@ function renderProgress(){
     <div class="tile"><div class="label">Journal entries</div><div class="value">${ks.filter(k=>S.logs[k].journal&&(S.logs[k].journal.text||S.logs[k].journal.win)).length}</div><div class="unit">all time</div></div>`;
 }
 
-/* ============ PLAN REFERENCE ============ */
+/* ============ PLAN REFERENCE (read-only summary of the live, current plan) ============ */
 function renderPlan(){
+  const P = planToday();
   let html='';
-  const days=[['Monday','06:45 Mobility (shoulders/thoracic) · 17:30 Strength A'],['Tuesday','06:15 Sprint intervals'],
-    ['Wednesday','06:45 Mobility (hips/ankles) · 17:30 Strength B'],['Thursday','06:15 Tempo run'],
-    ['Friday','06:45 Mobility (flow/lats) · 17:30 Strength C'],['Saturday','09:00 Strength D — commercial gym'],
-    ['Sunday','Zone 2 cardio 45–60 min']];
-  html += `<details open><summary>Weekly schedule</summary><div class="body"><ul>${
-    days.map(([d,t])=>`<li><b>${d}:</b> ${t}</li>`).join('')}</ul></div></details>`;
-  for(const kk of ['A','B','C','D']){
-    const w=WORKOUTS[kk];
+  const rows = [1,2,3,4,5,6,0].map(dow=>{
+    const sessions = (P.week[dow]||[]).map(s=>s.time+' '+s.label).join(' · ') || 'Rest';
+    return `<li><b>${DAY_NAMES7[dow]}:</b> ${sessions}</li>`;
+  }).join('');
+  html += `<details open><summary>Weekly schedule</summary><div class="body"><ul>${rows}</ul></div></details>`;
+  Object.keys(P.workouts).forEach(kk=>{
+    const w=P.workouts[kk];
     html += `<details><summary>${w.name}</summary><div class="body"><ul>${
       w.ex.map(([e,t])=>`<li>${e} — <b>${t}</b></li>`).join('')}</ul></div></details>`;
-  }
+  });
   html += `<details><summary>Progression rules</summary><div class="body"><ul>
     <li><b>DB/machine:</b> hit the top of the rep range on all sets → add weight, restart at the bottom. The app suggests this for you.</li>
     <li><b>Barbell:</b> +2.5 kg when all reps done at RPE ≤ 8. Stall twice → drop 10% and rebuild.</li>
@@ -1444,32 +1493,171 @@ function renderPlan(){
     'Currently week '+weekNum(todayD())+'. Deload weeks: 5, 10, 15… Diet break due every ~11 weeks.';
   document.getElementById('sync-token').value = S.sync.token||'';
   syncStatus(S.sync.last? 'Last synced: '+S.sync.last : 'Not connected yet.', S.sync.last?'ok':'');
+  renderPlanEditor();
 }
 function setStart(v){ if(v){ S.programStart=v; save(); renderPlan(); renderToday(true); } }
 
-/* ============ CALENDAR (.ics) EXPORT ============ */
+/* ============ PLAN EDITOR ============ */
+let editDay = null;
+const NEW_SESSION_DEFAULTS = {
+  strength:{label:'New Strength Session', time:'18:00', where:'Home gym'},
+  run:{label:'Run', time:'06:15', metric:'pace'},
+  cardio:{label:'Cardio', time:'09:00', metric:'pace'},
+  mobility:{label:'Mobility', time:'06:45', detail:'20 min mobility work'},
+  custom:{label:'Session', time:'12:00', detail:''}
+};
+function renderPlanEditor(){
+  if(editDay===null) editDay = todayD().getDay();
+  const el = document.getElementById('plan-editor');
+  const P = planToday();
+  const opts = [1,2,3,4,5,6,0].map(d=>`<option value="${d}" ${d===editDay?'selected':''}>${DAY_NAMES7[d]}</option>`).join('');
+  const sessions = P.week[editDay]||[];
+  let rows = sessions.map((s,i)=>{
+    const isStrength = s.type==='strength';
+    return `<div class="goalitem">
+      <div class="gtitle">${s.time} — ${s.label.replace(/</g,'&lt;')} ${catChip2(s.type)}</div>
+      <div class="gmeta">${isStrength? (s.where||'')+' · '+((P.workouts[s.w]||{ex:[]}).ex.length)+' exercises' : (s.detail||(s.metric==='lengths'?'tracked in lengths':'tracked by distance & pace'))}</div>
+      <div class="goalbtns">
+        <button onclick="renameSession(${editDay},${i})">Rename</button>
+        <button onclick="retimeSession(${editDay},${i})">Change time</button>
+        ${isStrength?`<button onclick="toggleExEditor(${i})">Edit exercises</button>`:''}
+        ${(s.type==='run'||s.type==='cardio')?`<button onclick="toggleMetric(${editDay},${i})">Switch to ${s.metric==='lengths'?'distance':'lengths'}</button>`:''}
+        <button onclick="removeSession(${editDay},${i})">Remove</button>
+      </div>
+      <div id="exedit-${i}" style="display:${pendingExEditors[i]?'block':'none'}; margin-top:10px; border-top:1px solid var(--line); padding-top:10px;"></div>
+    </div>`;
+  }).join('');
+  if(!sessions.length) rows = '<div class="chart-empty">Nothing planned this day. Add a session below.</div>';
+  el.innerHTML = `
+    <div class="small" style="margin:0 0 10px">Edits apply from today onward — anything already logged keeps the plan that was live at the time.</div>
+    <select id="editday-select" onchange="editDay=parseInt(this.value); renderPlanEditor()">${opts}</select>
+    <div style="margin-top:10px">${rows}</div>
+    <div class="addform" style="margin-top:14px; border-top:1px solid var(--line); padding-top:14px; border-bottom:none; padding-bottom:0;">
+      <label class="small" style="margin:0">Add a session to ${DAY_NAMES7[editDay]}</label>
+      <select id="newsess-type" onchange="onNewSessTypeChange()">
+        <option value="strength">Strength</option><option value="run">Run</option><option value="cardio">Cardio</option>
+        <option value="mobility">Mobility</option><option value="custom">Other</option>
+      </select>
+      <input id="newsess-label" placeholder="Label">
+      <div class="row2">
+        <input id="newsess-time" type="time" value="18:00">
+        <select id="newsess-metric" style="display:none"><option value="pace">Distance & pace</option><option value="lengths">Lengths</option></select>
+      </div>
+      <button class="btn" onclick="addSessionToDay()">+ Add to ${DAY_NAMES7[editDay]}</button>
+    </div>`;
+  onNewSessTypeChange();
+  Object.keys(pendingExEditors).forEach(i=>{ if(pendingExEditors[i]) renderExEditor(parseInt(i)); });
+}
+function catChip2(type){ return `<span class="catchip ${type==='strength'?'career':type==='mobility'?'fitness':'personal'}">${TYPE_LABEL[type]||type}</span>`; }
+function onNewSessTypeChange(){
+  const t = document.getElementById('newsess-type').value;
+  const d = NEW_SESSION_DEFAULTS[t];
+  document.getElementById('newsess-label').value = d.label;
+  document.getElementById('newsess-time').value = d.time;
+  document.getElementById('newsess-metric').style.display = (t==='run'||t==='cardio') ? 'block' : 'none';
+  if(t==='run'||t==='cardio') document.getElementById('newsess-metric').value = d.metric;
+}
+function addSessionToDay(){
+  const t = document.getElementById('newsess-type').value;
+  const label = document.getElementById('newsess-label').value.trim() || NEW_SESSION_DEFAULTS[t].label;
+  const time = document.getElementById('newsess-time').value || NEW_SESSION_DEFAULTS[t].time;
+  const P = editablePlan();
+  const id = 's'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  const sess = {id, type: t==='custom'?'mobility':t, label, time};
+  if(t==='strength'){
+    const wkey = 'X'+id;
+    P.workouts[wkey] = {name:label, where:'Home gym', ex:[]};
+    sess.w = wkey; sess.where='Home gym'; sess.type='strength';
+  } else if(t==='run'||t==='cardio'){
+    sess.metric = document.getElementById('newsess-metric').value;
+  } else {
+    sess.detail = t==='custom' ? '' : NEW_SESSION_DEFAULTS.mobility.detail;
+  }
+  if(!P.week[editDay]) P.week[editDay]=[];
+  P.week[editDay].push(sess);
+  save(); renderPlan(); renderToday(true);
+}
+function removeSession(dow, i){
+  if(!confirm('Remove this session from '+DAY_NAMES7[dow]+'? (From today onward — past logs are untouched.)')) return;
+  const P = editablePlan();
+  P.week[dow].splice(i,1);
+  save(); renderPlan(); renderToday(true);
+}
+function renameSession(dow, i){
+  const P = editablePlan(); const s = P.week[dow][i];
+  const name = prompt('Rename this session:', s.label);
+  if(name && name.trim()){ s.label = name.trim(); if(s.w && P.workouts[s.w]) P.workouts[s.w].name = name.trim();
+    save(); renderPlan(); renderToday(true); }
+}
+function retimeSession(dow, i){
+  const P = editablePlan(); const s = P.week[dow][i];
+  const t = prompt('New time (24hr, e.g. 18:30):', s.time);
+  if(t && /^\d{1,2}:\d{2}$/.test(t)){ s.time = t.length===4?'0'+t:t; save(); renderPlan(); renderToday(true); }
+  else if(t) alert('Use HH:MM format, e.g. 06:45 or 18:30.');
+}
+function toggleMetric(dow, i){
+  const P = editablePlan(); const s = P.week[dow][i];
+  s.metric = s.metric==='lengths' ? 'pace' : 'lengths';
+  save(); renderPlan(); renderToday(true);
+}
+let pendingExEditors = {};
+function toggleExEditor(i){
+  pendingExEditors[i] = !pendingExEditors[i];
+  const box = document.getElementById('exedit-'+i);
+  if(pendingExEditors[i]){ box.style.display='block'; renderExEditor(i); }
+  else box.style.display='none';
+}
+function renderExEditor(i){
+  const P = planToday(); const s = P.week[editDay][i]; if(!s || !s.w) return;
+  const w = P.workouts[s.w];
+  let rows = w.ex.map(([name,target],xi)=>`<div class="setrow" style="margin-bottom:7px">
+    <input style="flex:1; width:auto" value="${name.replace(/"/g,'&quot;')}" onchange="editExercise(${i},${xi},'name',this.value)">
+    <input style="width:90px" value="${target.replace(/"/g,'&quot;')}" onchange="editExercise(${i},${xi},'target',this.value)">
+    <span class="x" onclick="removeExercise(${i},${xi})">✕</span></div>`).join('');
+  rows += `<div class="setrow"><input id="newex-name-${i}" style="flex:1; width:auto" placeholder="Exercise name">
+    <input id="newex-target-${i}" style="width:90px" placeholder="e.g. 3 × 10"></div>
+    <span class="addset" onclick="addExercise(${i})">+ add exercise</span>`;
+  document.getElementById('exedit-'+i).innerHTML = rows;
+}
+function editExercise(i, xi, field, val){
+  const P = editablePlan(); const s = P.week[editDay][i]; const w = P.workouts[s.w];
+  w.ex[xi][field==='name'?0:1] = val; pendingExEditors[i]=true; save(); renderPlan();
+}
+function addExercise(i){
+  const name = document.getElementById('newex-name-'+i).value.trim();
+  const target = document.getElementById('newex-target-'+i).value.trim();
+  if(!name) return;
+  const P = editablePlan(); const s = P.week[editDay][i]; const w = P.workouts[s.w];
+  w.ex.push([name, target||'3 × 10']); pendingExEditors[i]=true; save(); renderPlan();
+}
+function removeExercise(i, xi){
+  const P = editablePlan(); const s = P.week[editDay][i]; const w = P.workouts[s.w];
+  w.ex.splice(xi,1); pendingExEditors[i]=true; save(); renderPlan();
+}
+
+/* ============ CALENDAR (.ics) EXPORT — built live from the current plan ============ */
+const ICS_BYDAY = {0:'SU',1:'MO',2:'TU',3:'WE',4:'TH',5:'FR',6:'SA'};
+const ICS_DUR = {strength:75, run:35, cardio:60, mobility:20};
 function downloadICS(){
-  // first occurrence of each weekday on/after today
+  const P = planToday();
   const nextDow=(dow)=>{ const d=todayD(); while(d.getDay()!==dow) d.setDate(d.getDate()+1);
     const p=n=>String(n).padStart(2,'0'); return d.getFullYear()+p(d.getMonth()+1)+p(d.getDate()); };
-  const mk=(uid,dow,day,time,dur,title,desc)=>{
-    return ['BEGIN:VEVENT','UID:gtfit-'+uid+'@gtfit','DTSTART;TZID=Europe/London:'+nextDow(dow)+'T'+time,
-      'DURATION:PT'+dur+'M','RRULE:FREQ=WEEKLY;BYDAY='+day,'SUMMARY:'+title,'DESCRIPTION:'+desc,
+  const mk=(uid,dow,time,dur,title,desc)=>{
+    const t = (time||'09:00').replace(':','')+'00';
+    return ['BEGIN:VEVENT','UID:gtfit-'+uid+'@gtfit','DTSTART;TZID=Europe/London:'+nextDow(dow)+'T'+t,
+      'DURATION:PT'+dur+'M','RRULE:FREQ=WEEKLY;BYDAY='+ICS_BYDAY[dow],'SUMMARY:'+title,'DESCRIPTION:'+desc,
       'BEGIN:VALARM','TRIGGER:-PT30M','ACTION:DISPLAY','DESCRIPTION:'+title,'END:VALARM','END:VEVENT'].join('\r\n');
   };
-  const ev=[
-    mk('mob-mon',1,'MO','064500',20,'Mobility — Shoulders & Thoracic','20 min morning mobility before work'),
-    mk('str-a',1,'MO','173000',70,'Strength A — Upper Push (home gym)','Log it in GT Fit'),
-    mk('run-tue',2,'TU','061500',35,'Sprint Intervals','8–10 × 30s sprints, back by 06:50'),
-    mk('mob-wed',3,'WE','064500',20,'Mobility — Hips & Ankles','20 min morning mobility'),
-    mk('str-b',3,'WE','173000',70,'Strength B — Lower Body (home gym)','Log it in GT Fit'),
-    mk('run-thu',4,'TH','061500',40,'Steady Tempo Run','10 easy · 15–20 tempo · 10 easy'),
-    mk('mob-fri',5,'FR','064500',20,'Mobility — Full-Body Flow & Lats','20 min morning mobility'),
-    mk('str-c',5,'FR','173000',70,'Strength C — Upper Pull & Arms (home gym)','Log it in GT Fit'),
-    mk('str-d',6,'SA','090000',90,'Strength D — Full-Body Barbell (commercial gym)','Squat day. Log it in GT Fit'),
-    mk('cardio-sun',0,'SU','090000',60,'Zone 2 Cardio','45–60 min conversational pace')
-  ].join('\r\n');
-  const ics='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//GTFit//EN\r\nCALSCALE:GREGORIAN\r\n'+ev+'\r\nEND:VCALENDAR';
+  const ev=[];
+  [0,1,2,3,4,5,6].forEach(dow=>{
+    (P.week[dow]||[]).forEach(s=>{
+      const dur = ICS_DUR[s.type]||30;
+      const desc = s.detail || (s.w? 'Log it in GT Fit' : '');
+      ev.push(mk(s.id+'-'+dow, dow, s.time, dur, s.label, desc));
+    });
+  });
+  if(!ev.length){ alert('No sessions in your current plan to export.'); return; }
+  const ics='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//GTFit//EN\r\nCALSCALE:GREGORIAN\r\n'+ev.join('\r\n')+'\r\nEND:VCALENDAR';
   const blob=new Blob([ics],{type:'text/calendar'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download='gtfit-schedule.ics'; a.click(); URL.revokeObjectURL(a.href);
