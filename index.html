@@ -290,7 +290,7 @@
 
 <div class="apphead">
   <div><h1>GT Fit</h1><div class="sub" id="head-sub">Cut to 10% · lean muscle</div></div>
-  <div class="sub" id="head-week"></div>
+  <div style="text-align:right"><div class="sub" id="head-week"></div><div class="sub" id="saved-indicator" style="font-size:.7rem"></div></div>
 </div>
 
 <div class="wrap">
@@ -596,6 +596,7 @@
         <button class="btn" onclick="syncPull()">Pull latest</button>
       </div>
       <div class="syncstat" id="sync-stat"></div>
+      <div class="small" id="sync-recovery" style="display:none"></div>
     </div>
     <div class="card">
       <h2>Program settings</h2>
@@ -795,10 +796,38 @@ function load(){
     b.style.display='block';
   }
 }
+let lastSavedAt = null;
 function save(){
-  if(persistent){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){ persistent=false; } }
+  if(persistent){
+    try{ localStorage.setItem(KEY, JSON.stringify(S)); lastSavedAt = new Date(); }
+    catch(e){ persistent=false; }
+  }
   dirty = true; scheduleAutoPush();
+  updateSavedIndicator();
 }
+function updateSavedIndicator(){
+  const el = document.getElementById('saved-indicator');
+  if(!el) return;
+  if(!persistent){ el.textContent='⚠️ not saving on this device'; el.style.color='#ff6b6b'; return; }
+  el.style.color='var(--sub, #8a93a6)';
+  el.textContent = lastSavedAt ? 'Saved '+lastSavedAt.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
+}
+// Flush any pending (debounced) edits and force a save whenever the app is
+// backgrounded, closed, or loses focus — covers the case where a field was
+// changed but never blurred (e.g. typed then the app was swiped away) before
+// its onchange/debounce would otherwise have fired.
+function flushSave(){
+  try{
+    if(document.activeElement && typeof document.activeElement.blur==='function' && document.activeElement !== document.body){
+      document.activeElement.blur();
+    }
+  }catch(e){}
+  try{ if(typeof jTimer!=='undefined' && jTimer){ clearTimeout(jTimer); jTimer=null; jSave(); } }catch(e){}
+  save();
+}
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') flushSave(); });
+window.addEventListener('pagehide', flushSave);
+window.addEventListener('blur', flushSave);
 function dlog(k){ if(!S.logs[k]) S.logs[k] = {sess:{}, lifts:{}, habits:{}}; return S.logs[k]; }
 
 /* ============ DATE HELPERS ============ */
@@ -1989,6 +2018,7 @@ function renderPlan(){
     'Currently week '+weekNum(todayD())+'. Deload weeks: 5, 10, 15… Diet break due every ~11 weeks.';
   document.getElementById('sync-token').value = S.sync.token||'';
   syncStatus(S.sync.last? 'Last synced: '+S.sync.last : 'Not connected yet.', S.sync.last?'ok':'');
+  showRecoveryLink();
   renderPlanEditor();
 }
 function setStart(v){ if(v){ S.programStart=v; save(); renderPlan(); renderToday(true); } }
@@ -2195,7 +2225,48 @@ async function syncConnect(){
     }
     S.sync.last = new Date().toLocaleString(); save();
     syncStatus('Connected ✓ — synced '+S.sync.last,'ok');
+    showRecoveryLink();
   }catch(e){ syncStatus('Connection failed: '+e.message+' (check the token has the gist scope)','err'); }
+}
+// Home-screen web apps on iOS can occasionally have their local storage
+// cleared by the OS, wiping S.sync.token/gistId along with everything else —
+// so cloud sync alone can't self-heal after that happens. Embedding the sync
+// credentials in the install URL means the Home Screen icon itself (which
+// iOS does not evict) can restore them, so re-opening the app can silently
+// pull the cloud copy back down even after a full local wipe.
+function showRecoveryLink(){
+  const el = document.getElementById('sync-recovery');
+  if(!el || !S.sync.gistId || !S.sync.token) return;
+  const url = location.origin + location.pathname + '?sync=' + encodeURIComponent(S.sync.gistId) + '&tk=' + encodeURIComponent(S.sync.token);
+  el.style.display = 'block';
+  el.innerHTML = '<b>Important — update your Home Screen icon:</b> for cloud sync to auto-recover your data if this device ever loses its local storage, your Home Screen icon needs to point at a link that carries your sync details. Delete your current GT Fit icon, open the link below in Safari, then Share → Add to Home Screen from there instead.'
+    + '<div style="word-break:break-all; font-family:monospace; font-size:.7rem; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:8px; margin:8px 0;">'+url+'</div>'
+    + '<button class="btn" type="button" onclick="navigator.clipboard.writeText(\''+url.replace(/'/g,"\\'")+'\').then(()=>this.textContent=\'Copied ✓\')">Copy link</button>'
+    + '<div class="small" style="margin-top:6px">This link contains your GitHub token, scoped only to your private gist — don\'t share it with anyone else.</div>';
+}
+function seedSyncFromURL(){
+  try{
+    const p = new URLSearchParams(location.search);
+    const gid = p.get('sync'), tok = p.get('tk');
+    if(gid && tok){ S.sync.gistId = gid; S.sync.token = tok; }
+  }catch(e){}
+}
+async function autoRecoverIfEmpty(){
+  if(!S.sync.token || !S.sync.gistId) return;
+  if(S.logs && Object.keys(S.logs).length) return; // local already has data — don't touch it
+  try{
+    const g = await gh('https://api.github.com/gists/'+S.sync.gistId,'GET',S.sync.token);
+    const content = g.files['gtfit-data.json'].content;
+    const d = JSON.parse(content);
+    if(d && d.logs && Object.keys(d.logs).length){
+      const creds = S.sync;
+      S = d; S.sync = creds; migrate(); save(); renderAll();
+      const b = document.getElementById('storage-banner');
+      b.innerHTML = '✅ <b>Recovered your data from cloud backup.</b> This device\'s local storage looked empty, so GT Fit pulled your last synced copy from the cloud automatically.';
+      b.style.display='block';
+      setTimeout(()=>{ if(persistent) b.style.display='none'; }, 8000);
+    }
+  }catch(e){ /* best-effort background recovery — fail silently, don't alarm the user */ }
 }
 async function syncPush(manual){
   if(!S.sync.token || !S.sync.gistId){ if(manual) syncStatus('Connect first.','err'); return; }
@@ -2267,7 +2338,7 @@ function switchView(v){
   window.scrollTo(0,0);
 }
 function renderAll(){ renderToday(); renderCal(); renderProgress(); renderPlan(); renderJournal(); renderGrowth(); renderMoney(); }
-load(); renderAll();
+load(); seedSyncFromURL(); renderAll(); updateSavedIndicator(); autoRecoverIfEmpty();
 </script>
 </body>
 </html>
