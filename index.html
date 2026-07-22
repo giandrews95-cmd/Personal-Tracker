@@ -761,16 +761,42 @@ function migrate(){
     S.programStart = ks.length ? ks[0] : key(todayD());
   }
 }
+function storageWorks(){
+  // Some browser modes (e.g. Safari Private Browsing) let getItem() succeed
+  // but throw on setItem() — a plain try/catch around the real load can miss
+  // that. Test a real write+read+remove round-trip explicitly before trusting it.
+  try{
+    const t = '__gtfit_test__';
+    localStorage.setItem(t, '1');
+    const ok = localStorage.getItem(t) === '1';
+    localStorage.removeItem(t);
+    return ok;
+  }catch(e){ return false; }
+}
 function load(){
+  persistent = storageWorks();
+  if(!persistent){
+    migrate();
+    const b = document.getElementById('storage-banner');
+    b.innerHTML = '⚠️ <b>Your changes are NOT being saved on this device.</b> This usually means you\'re in Private Browsing, or opened this from a link inside another app (Messages, Notes) instead of a normal Safari tab. Open this page in regular Safari and tap Share → Add to Home Screen, then use that icon from now on. Until then, export a backup (Plan → Backup) before closing the app or you will lose today\'s entries.';
+    b.style.display='block';
+    return;
+  }
   try{
     const raw = localStorage.getItem(KEY);
     if(raw){ const d = JSON.parse(raw); if(d && d.logs){ S = Object.assign(S, d); } }
     migrate();
     localStorage.setItem(KEY, JSON.stringify(S));
-  }catch(e){ migrate(); persistent = false; document.getElementById('storage-banner').style.display='block'; }
+  }catch(e){
+    // Data existed but was unreadable (corrupted JSON) — don't silently discard it.
+    migrate();
+    const b = document.getElementById('storage-banner');
+    b.innerHTML = '⚠️ <b>Couldn\'t read your saved data</b> — it may be corrupted. Nothing has been deleted yet. If you have a backup file (Plan → Backup → Import data), use it now rather than continuing, or your old entries could get overwritten.';
+    b.style.display='block';
+  }
 }
 function save(){
-  if(persistent){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+  if(persistent){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){ persistent=false; } }
   dirty = true; scheduleAutoPush();
 }
 function dlog(k){ if(!S.logs[k]) S.logs[k] = {sess:{}, lifts:{}, habits:{}}; return S.logs[k]; }
@@ -2220,9 +2246,10 @@ function importData(input){
 }
 function wipeData(){
   if(confirm('Delete ALL logged data? Export a backup first if unsure.')){
-    S = {logs:{}, habits:JSON.parse(JSON.stringify(DEFAULT_HABITS)), reviews:{},
-         programStart:key(todayD()), lastDietBreak:null, sync:{token:'',gistId:'',last:null}};
-    save(); renderAll();
+    S = {logs:{}, habits:[], reviews:{}, programStart:null, lastDietBreak:null, sync:{token:'',gistId:'',last:null},
+      goals:[], books:[], priorities:{}, bonusLedger:[], planVersions:[],
+      finance:{snapshots:[], emergencyFund:{current:0,target:0}, checkins:{}}, skills:[], decisions:[], values:{mission:'',list:[]}};
+    migrate(); save(); renderAll();
   }
 }
 
